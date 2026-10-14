@@ -15,14 +15,14 @@ app.use(cors());
 // Hämta alla arbetslivserfarenheter
 app.get("/api/workexperience", async (req, res) => {
     try {
-        const db = app.locals.db;
-        const experiences = await db.all(
-            "SELECT * FROM workexperience ORDER BY startdate DESC"
-        );
+        const experiences = await WorkExperience.find()
+        .sort({ startdate: -1 });
 
         res.status(200).json(experiences);
+
     } catch (error) {
         console.error(error);
+
         res.status(500).json({
             error: "Kunde inte hämta arbetslivserfarenheter."
         });
@@ -75,25 +75,19 @@ app.post("/api/workexperience", async (req, res) => {
 
 
     try {
-        const db = app.locals.db;
-
-        const result = await db.run(
-            `INSERT INTO workexperience
-        (companyname, jobtitle, location, startdate, enddate, description)
-        VALUES (?, ?, ?, ?, ?, ?)`,
-            [
-                companyname.trim(),
-                jobtitle.trim(),
-                location.trim(),
-                startdate.trim(),
-                enddate.trim(),
-                description.trim()
-            ]
+        // Skapa ett nytt dokument i MongoDB
+        const experience = await WorkExperience.create(
+            Object.fromEntries(
+                Object.entries(fields).map(([key, value]) => [
+                    key,
+                    value.trim()
+                ])
+            )
         );
 
         res.status(201).json({
             message: "Arbetslivserfarenheten har lagts till.",
-            id: result.lastID
+            id: experience._id
         });
 
     } catch (error) {
