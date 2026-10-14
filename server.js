@@ -16,7 +16,7 @@ app.use(cors());
 app.get("/api/workexperience", async (req, res) => {
     try {
         const experiences = await WorkExperience.find()
-        .sort({ startdate: -1 });
+            .sort({ startdate: -1 });
 
         res.status(200).json(experiences);
 
@@ -101,14 +101,15 @@ app.post("/api/workexperience", async (req, res) => {
 
 // Uppdatera en befintlig arbetslivserfarenhet
 app.put("/api/workexperience/:id", async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
 
-    // Kontrollera att ID är giltigt
-    if (!Number.isSafeInteger(id) || id <= 0) {
+    // Kontrollera att MongoDB-ID är giltigt
+    if (!mongoose.isValidObjectId(id)) {
         return res.status(400).json({
             error: "Ogiltigt ID."
         });
     }
+
     const {
         companyname,
         jobtitle,
@@ -118,7 +119,7 @@ app.put("/api/workexperience/:id", async (req, res) => {
         description
     } = req.body || {};
 
-    // Validera alla fält
+    // Kontrollera att alla fält innehåller text
     const fields = {
         companyname,
         jobtitle,
@@ -137,30 +138,23 @@ app.put("/api/workexperience/:id", async (req, res) => {
     }
 
     try {
-        const db = app.locals.db;
-
-        const result = await db.run(
-            `UPDATE workexperience
-            SET companyname = ?,
-            jobtitle = ?,
-            location = ?,
-            startdate = ?,
-            enddate = ?,
-            description = ?
-            WHERE id = ?`,
-            [
-                companyname.trim(),
-                jobtitle.trim(),
-                location.trim(),
-                startdate.trim(),
-                enddate.trim(),
-                description.trim(),
-                id
-            ]
+        // Uppdatera dokumentet i MongoDB
+        const experience = await WorkExperience.findByIdAndUpdate(
+            id,
+            Object.fromEntries(
+                Object.entries(fields).map(([key, value]) => [
+                    key,
+                    value.trim()
+                ])
+            ),
+            {
+                returnDocument: "after",
+                runValidators: true
+            }
         );
 
-        // Kontrollera om posten finns
-        if (result.changes === 0) {
+        // Kontrollera om dokumentet finns
+        if (!experience) {
             return res.status(404).json({
                 error: "Arbetslivserfarenheten hittades inte."
             });
@@ -169,6 +163,7 @@ app.put("/api/workexperience/:id", async (req, res) => {
         res.status(200).json({
             message: "Arbetslivserfarenheten har uppdaterats."
         });
+
     } catch (error) {
         console.error(error);
 
@@ -180,25 +175,21 @@ app.put("/api/workexperience/:id", async (req, res) => {
 
 // Radera en arbetslivserfarenhet
 app.delete("/api/workexperience/:id", async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
 
-    // Kontrollera att ID är giltigt
-    if (!Number.isSafeInteger(id) || id <= 0) {
+    // Kontrollera att MongoDB-ID är giltigt
+    if (!mongoose.isValidObjectId(id)) {
         return res.status(400).json({
             error: "Ogiltigt ID."
         });
     }
 
     try {
-        const db = app.locals.db;
+        // Hitta och radera dokumentet i MongoDB
+        const experience = await WorkExperience.findByIdAndDelete(id);
 
-        const result = await db.run(
-            "DELETE FROM workexperience WHERE id = ?",
-            [id]
-        );
-
-        // Kontrollera om posten finns
-        if (result.changes === 0) {
+        // Kontrollera om dokumentet finns
+        if (!experience) {
             return res.status(404).json({
                 error: "Arbetslivserfarenheten hittades inte."
             });
@@ -207,6 +198,7 @@ app.delete("/api/workexperience/:id", async (req, res) => {
         res.status(200).json({
             message: "Arbetslivserfarenheten har raderats."
         });
+
     } catch (error) {
         console.error(error);
 
