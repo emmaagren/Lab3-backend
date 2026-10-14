@@ -1,6 +1,9 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
-const initDatabase = require("./database");
+const mongoose = require("mongoose");
+const WorkExperience = require("./models/WorkExperience");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -219,5 +222,25 @@ app.delete("/api/workexperience/:id", async (req, res) => {
     }
 });
 
-// Starta servern
+// Starta servern och anslut till MongoDB
+async function startServer() {
+    try {
+
+        console.log("Försöker ansluta till MongoDB...");
+
+        await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 10000
+        });
+
+        console.log("Ansluten till MongoDB!");
+
+        app.listen(PORT, () => {
+            console.log(`Servern körs på http://localhost:${PORT}`);
+        });
+
+    } catch (error) {
+        console.error("Kunde inte ansluta till MongoDB.", error.message);
+    }
+}
+
 startServer();
