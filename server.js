@@ -29,21 +29,6 @@ app.get("/api/workexperience", async (req, res) => {
     }
 });
 
-// Starta servern och anslut till databasen
-async function startServer() {
-    try {
-        const db = await initDatabase();
-        app.locals.db = db;
-
-        app.listen(PORT, () => {
-            console.log(`Servern körs på http://localhost:${PORT}`);
-            console.log("Databasen är ansluten!");
-        });
-    } catch (error) {
-        console.error("Kunde inte starta servern:", error);
-    }
-}
-
 // Lägg till en ny arbetslivserfarenhet
 app.post("/api/workexperience", async (req, res) => {
     const {
@@ -221,7 +206,7 @@ async function startServer() {
         console.log("Ansluten till MongoDB!");
 
         app.listen(PORT, () => {
-            console.log(`Servern körs på http://localhost:${PORT}`);
+            console.log(`Servern körs på port ${PORT}`);
         });
 
     } catch (error) {
