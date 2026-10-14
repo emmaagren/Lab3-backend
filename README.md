@@ -31,7 +31,7 @@ Inmatad data valideras och tydliga felmeddelanden returneras vid fel.
 `http://localhost:3000/api/workexperience`
 
 **Publicerad API-adress:**
-
+`https://lab3-workexperience-api.onrender.com/api/workexperience`
 
 ## Installation
 
